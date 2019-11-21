@@ -1,4 +1,5 @@
 function fig_data=VAC_Fig1(As,trialtypeName)
+%% Doesnt work anymore - lot of changes made in the As structure 
 if nargin<2
     trialtypeName='All';
 end

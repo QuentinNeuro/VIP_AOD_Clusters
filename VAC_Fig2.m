@@ -1,35 +1,40 @@
-function figData=VAC_Fig2(As,thistype)
-
+function [As,figData]=VAC_Fig2(As,thistype,clusterNbKmeans)
+%% Sanity check
+thisClusterNbName=sprintf('KClusters_%.0d',clusterNbKmeans);
+if ~isfield(As.All.Events,thisClusterNbName)
+    disp('Warning, requested cluster does not exist... computing in progress')
+    As=VAC_kmeans(As,thistype,'Events',clusterNbKmeans);
+    As=VAC_IndexMatch(As,thistype,'Events',clusterNbKmeans);
+    As=VAC_kmeans(As,thistype,'PCA',clusterNbKmeans);
+    As=VAC_IndexMatch(As,thistype,'PCA',clusterNbKmeans);
+end
 %% Data
     thisTime=As.(thistype).Time;
     thisData=As.(thistype).Data;
     thisSessionIndex=As.(thistype).Index.Session;
     yraster=1:size(thisData,1);
     thisPCA=As.(thistype).PCA.PCs;
-    thisPCA_IndexK=As.(thistype).PCA.Cluster_Index;
+    thisPCA_IndexK=As.(thistype).PCA.(thisClusterNbName).Index;
     thisPCA_TSNE=As.(thistype).PCA.TSNE;
-    thisPCA_DFFAVG=As.(thistype).PCA.Cluster_DFFAVG;
-    thisPCA_DFFSTD=As.(thistype).PCA.Cluster_DFFSTD;
-    thisPCA_SessionMatchNames=As.(thistype).PCA.IndexMatch.Name;
-    thisPCA_SessionMatchProba=As.(thistype).PCA.IndexMatch.Proba;
+    thisPCA_DFFAVG=As.(thistype).PCA.(thisClusterNbName).DFFAVG;
+    thisPCA_DFFSTD=As.(thistype).PCA.(thisClusterNbName).DFFSTD;
+    thisPCA_SessionMatchNames=As.(thistype).PCA.(thisClusterNbName).IndexMatch.Name;
+    thisPCA_SessionMatchProba=As.(thistype).PCA.(thisClusterNbName).IndexMatch.Proba;
     thisEVENTS=As.(thistype).Events.Data;
-    thisEVENTS_IndexK=As.(thistype).Events.Cluster_Index;
+    thisEVENTS_IndexK=As.(thistype).Events.(thisClusterNbName).Index;
     thisEVENTS_TSNE=As.(thistype).Events.TSNE;
-    thisEVENTS_DFFAVG=As.(thistype).Events.Cluster_DFFAVG;
-    thisEVENTS_DFFSTD=As.(thistype).Events.Cluster_DFFSTD;
-    thisEVENTS_SessionMatchNames=As.(thistype).Events.IndexMatch.Name;
-    thisEVENTS_SessionMatchProba=As.(thistype).Events.IndexMatch.Proba;
-    
-    
+    thisEVENTS_DFFAVG=As.(thistype).Events.(thisClusterNbName).DFFAVG;
+    thisEVENTS_DFFSTD=As.(thistype).Events.(thisClusterNbName).DFFSTD;
+    thisEVENTS_SessionMatchNames=As.(thistype).Events.(thisClusterNbName).IndexMatch.Name;
+    thisEVENTS_SessionMatchProba=As.(thistype).Events.(thisClusterNbName).IndexMatch.Proba;
+
     color4plot='brgcy';
-
-
 %% Figure
 fig_data=figure('Name',thistype,'NumberTitle','off');
 % Raster with all trials
 subplot(6,2,[1 2])
 imagesc(thisTime,yraster,thisData,[-20 20]);
-xlabel('Time from reinf (sec)'); ylabel('Trial Nb');
+xlabel('Time from reinf (sec)'); ylabel('Trial Nb');xlim([-3 4]);
 % AVG traces for Events-clusters and PCA-based clusters
 subplot(6,2,3)
 hold on
@@ -42,7 +47,7 @@ end
 else
     plot(thisTime,thisEVENTS_DFFAVG);
 end
-title('Events'); xlabel('Time from reinf (sec)'); ylabel('Z-score fluo');
+title('Events'); xlabel('Time from reinf (sec)'); ylabel('Z-score fluo'); xlim([-3 4]);
 subplot(6,2,4)
 hold on
 if size(thisPCA_DFFAVG,1)<3
@@ -54,33 +59,27 @@ end
 else
     plot(thisTime,thisPCA_DFFAVG);
 end
-title('PCA')
+title('PCA'); xlabel('Time from reinf (sec)'); ylabel('Z-score fluo'); xlim([-3 4]);
 
-% Distribution
-switch thistype
-    case 'All'
-        TicksNb=[1 2 4 round(size(thisEVENTS_SessionMatchNames,2)/2) size(thisEVENTS_SessionMatchNames,2)]
-        TicksNames={thisEVENTS_SessionMatchNames(1), thisEVENTS_SessionMatchNames(2), thisEVENTS_SessionMatchNames(4), '...' , thisEVENTS_SessionMatchNames(end)};
-    otherwise
-        TicksNb=[1 ; round(size(thisEVENTS_SessionMatchNames,2)/2) ; size(thisEVENTS_SessionMatchNames,2)];
-        TicksNames={thisEVENTS_SessionMatchNames(1), '...', thisEVENTS_SessionMatchNames(end)};
-end
-
+TicksNb=1:1:size(thisEVENTS_SessionMatchNames,2);
+TicksNames=thisEVENTS_SessionMatchNames;
 subplot(6,2,5)
 bar(thisEVENTS_SessionMatchProba,'stack');
 hold on
 ylim([0 1.1]); ylabel('% of each cluster');
 title('Distribution');
-%xticks(TicksNb); xtickangle(45);
-%xticklabels(TicksNames);
+xticks(TicksNb); 
+xticklabels(TicksNames);
+xtickangle(45);
 
 subplot(6,2,6)
 bar(thisPCA_SessionMatchProba,'stack');
 hold on
 ylim([0 1.1]); ylabel('% of each cluster');
 title('Distribution');
-%xticks(TicksNb); xtickangle(45);
-%xticklabels(TicksNames);
+xticks(TicksNb); 
+xticklabels(TicksNames);
+xtickangle(45);
 
 % TSNEs
 subplot(6,2,7)
