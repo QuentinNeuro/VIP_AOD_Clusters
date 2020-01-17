@@ -10,8 +10,8 @@ ReCluster=0;
 clusterNbKmeans=3;
 % data massaging
 decimatefactor=1;
-newZscore=1;
-MaxNorm=0;
+newZscore=0;
+NormMax=1;
 % Figure
 FigType='Reward';
 % Trialtype names
@@ -24,7 +24,8 @@ EventTimes=[-1 0 ; 0 1 ; 1 3 ; 3 6];
 EventNames_Concat={'Cue1','RewardAVG','RewardMax','Cue2','PunishAVG','PunishMax'}; % Used for trial type 4, concat of rew and punish trials.
 EventTimes_Concat=[-1 0 ; 0 3 ; 0 6 ; 8.1 9.1;9.1 12.1; 9.1 15.1];
 % PCA parameters
-thresholdexplainedPCA=85;
+thresholdexplainedPCA=95;
+minPCs=4;
 plotExplainedPCs=1;
 TimeCut=[0 4]; % make empty for no cut
 
@@ -71,11 +72,16 @@ As.(TrialTypes{4}).Time=[As.Raw.Time As.Raw.Time+9+0.1];
 thisrew=As.(TrialTypes{2}).Data;
 thispun=As.(TrialTypes{3}).Data;
 As.(TrialTypes{4}).Data=[thisrew thispun-(thispun(:,1)-thisrew(:,end))];
-
+end
 %% Organize data
 tic
 for i=1:TrialTypeNb
     thisData=As.(TrialTypes{i}).Data;
+    if NormMax
+        thisMax=max(thisData,[],2);
+        thisData=thisData./thisMax;
+        As.(TrialTypes{i}).Data=thisData;
+    end
     thisTime=As.(TrialTypes{i}).Time;
     As.(TrialTypes{i}).DFF_AVG=mean(thisData,1);
     As.(TrialTypes{i}).DFF_STD=std(thisData,1);
@@ -123,7 +129,7 @@ for i=1:TrialTypeNb
         end
         thisPCAData=thisDecimatePCAData;
     end
-    thisPCA=VAC_myPCA(thisPCAData',thresholdexplainedPCA,plotExplainedPCs);
+    thisPCA=VAC_myPCA(thisPCAData',thresholdexplainedPCA,plotExplainedPCs,minPCs);
     As.(TrialTypes{i}).PCA.PCs=thisPCA;
     % TSNE
     thisTSNE=tsne(thisPCA);
@@ -131,7 +137,6 @@ for i=1:TrialTypeNb
 end
 Timer(2)=toc;
 sprintf('Organize data %.2d sec', Timer(2))
-end
 
 %% Clustering and matching
 thisClusterNbName=sprintf('KClusters_%.0d',clusterNbKmeans);
@@ -146,6 +151,9 @@ end
 Timer(3)=toc;
 sprintf('Generate Clusters %.2d sec', Timer(3))
 end
+
+%% Extract data for only responsive cells (according to HJP and ZS)
+As=VAC_ResponsiveCells(As,NormMax);
 
 %% figure
 % fig_data=VAC_Fig1(As);

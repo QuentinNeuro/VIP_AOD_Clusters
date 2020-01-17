@@ -1,4 +1,4 @@
-function dataPCA=VAC_myPCA(data,threshold,plotExplained)
+function dataPCA=VAC_myPCA(data,threshold,plotExplained,minPCs)
 [coeffPCA,~,~,~,explainedPCA]=pca(data);
 % Sum explainedPCA to get the corresponding number of coeff
 sumExplainedPCA=0;
@@ -7,8 +7,8 @@ while sumExplainedPCA<threshold
     index=index+1;
     sumExplainedPCA=sumExplainedPCA+explainedPCA(index);
 end
-if index<3
-    indexPCA=3;
+if index<minPCs
+    indexPCA=minPCs;
 else
 indexPCA=index;
 end

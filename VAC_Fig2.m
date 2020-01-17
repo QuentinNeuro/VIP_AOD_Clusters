@@ -1,7 +1,7 @@
 function [As,figData]=VAC_Fig2(As,thistype,clusterNbKmeans)
 %% Sanity check
 thisClusterNbName=sprintf('KClusters_%.0d',clusterNbKmeans);
-if ~isfield(As.All.Events,thisClusterNbName)
+if ~isfield(As.(thistype).Events,thisClusterNbName)
     disp('Warning, requested cluster does not exist... computing in progress')
     As=VAC_kmeans(As,thistype,'Events',clusterNbKmeans);
     As=VAC_IndexMatch(As,thistype,'Events',clusterNbKmeans);
