@@ -5,8 +5,8 @@
 % - v 0.92 by Quentin November 2019 - 
 
 %% Parameters
-LoadNewData=1;
-ReCluster=0;
+LoadNewData=0;
+ReCluster=1;
 clusterNbKmeans=5;
 % data massaging
 smoothing=0;
@@ -17,7 +17,7 @@ NormMax=1;
 TimeCutMax=[0 4];
 % Figure
 Figures=1;
-figType='RewAct';
+figType='Punish';
 figClusterNb=5;
 figNbOfPC=3;
 % Trialtype names
